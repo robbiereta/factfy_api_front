@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { useForm } from "react-hook-form";
 import jquery from "jquery";
 import moment from "moment";
+import DateTimePicker from "react-datetime-picker";
 import {
   MDBBtn,
   MDBModal,
@@ -17,6 +18,30 @@ import {
 import "./styles.css";
 import "./styles.css";
 import DropDown from "./select";
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where
+} from "firebase/firestore/lite";
+const base64json = require("base64json");
+const firebaseConfig = {
+  apiKey: "AIzaSyDwaatnrPGX1cmd_iPQawQy6to-3weRfgM",
+  authDomain: "test2-b0c78.firebaseapp.com",
+  databaseURL: "https://test2-b0c78-default-rtdb.firebaseio.com",
+  projectId: "test2-b0c78",
+  storageBucket: "test2-b0c78.appspot.com",
+  messagingSenderId: "1020612965446",
+  appId: "1:1020612965446:web:eb1e62394169e72485c647",
+  measurementId: "G-XYPBVB6JF6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 var notas = {
   partidas: []
 };
@@ -51,11 +76,109 @@ async function recibo() {
   $("#factura").append(url);
   $("#recibo").click();
 }
+var lista = {
+  recibos: []
+};
 
+var factura_templ = {
+  Version: "3.3",
+  Serie: "A",
+  Folio: "2",
+  Fecha: "2021-09-20T12:00:00",
+  FormaPago: "01",
+  SubTotal: "1.00",
+  Moneda: "MXN",
+  Total: "1.16",
+  MetodoPago: "PUE",
+  LugarExpedicion: "58297",
+  TipoDeComprobante: "I",
+  Emisor: {
+    Rfc: "ZUÑ920208KL4",
+    Nombre: "ZAPATERIA URTADO ÑERI SA DE CV",
+    RegimenFiscal: "601"
+  },
+  Receptor: {
+    Rfc: "XAXX010101000",
+    Nombre: "PUBLICO EN GENERAL",
+    UsoCFDI: "G01"
+  },
+  Conceptos: {
+    Concepto: [
+      {
+        ClaveProdServ: "01010101",
+        ClaveUnidad: "E48",
+        NoIdentificacion: "00001",
+        Cantidad: "1",
+        Unidad: "Unidad de Servicio",
+        Descripcion: "Prueba Timbrado",
+        ValorUnitario: "1.00",
+        Importe: "1.00",
+        Impuestos: {
+          Traslados: {
+            Traslado: [
+              {
+                Base: "1",
+                Impuesto: "002",
+                TipoFactor: "Tasa",
+                TasaOCuota: "0.160000",
+                Importe: "0.16"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  Impuestos: {
+    TotalImpuestosTrasladados: "0.16",
+    Traslados: {
+      Traslado: [
+        {
+          Impuesto: "002",
+          TipoFactor: "Tasa",
+          TasaOCuota: "0.160000",
+          Importe: "0.16"
+        }
+      ]
+    }
+  }
+};
+
+let encoded = base64json.stringify(factura_templ, null, 2);
 async function global() {
-  const invoice = await facturapi.receipts.createGlobalInvoice({
-    from: fecha_inicio,
-    to: fecha_fin
+  const citiesCol = collection(db, "notas_factura");
+  console.log(fecha_inicio);
+  const q = query(
+    collection(db, "notas_factura"),
+    where("concepto", "==", "Venta")
+  );
+  const citySnapshot = await getDocs(q);
+  const cityList = citySnapshot.docs.map((doc) => doc.data());
+  console.log(cityList);
+
+  var doubles = cityList.map(function (x) {
+    var ticket = x.ticket;
+    var id = x.id_ticket;
+    var fecha = x.Fecha;
+
+    if (fecha > fecha_fin) {
+      var total = 0;
+      var prods = "";
+
+      ticket.map(function (w) {
+        prods += w.descripcion + ",";
+        total += Number(w.precio);
+        console.log("t:" + total);
+      });
+      var newCon = {
+        id: id,
+        total: total,
+        prods: prods,
+        fecha: fecha
+      };
+      lista.recibos.push(newCon);
+    }
+    //agregar aqui los campos para las columnas
   });
 }
 
@@ -112,11 +235,11 @@ export default function Global() {
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
-          type="text"
+          type="date"
           {...register("fecha_inicio")}
           placeholder="fecha inicio"
         />
-
+        <DateTimePicker />
         <input type="text" {...register("fecha_fin")} placeholder="fecha fin" />
 
         <MDBBtn color="success" type="submit" value="agregar">
@@ -175,28 +298,11 @@ var rec;
 async function jsonCambio(data) {
   fecha_inicio = data.fecha_inicio;
   fecha_fin = data.fecha_fin;
-
+  var finicio = Date.parse(fecha_inicio);
+  var ffin = Date.parse(fecha_fin);
   var total2 = 0;
-  async function totales() {
-    const searchResult = await facturapi.receipts.list({
-      date: {
-        lte: new Date(fecha_fin),
-        gte: new Date(fecha_inicio)
-      }
-    });
-    var doubles = searchResult.data.map(function (x) {
-      folio = JSON.stringify(x.folio_number);
-      var id = JSON.stringify(x.id);
-      var total = JSON.stringify(x.total);
-      var status = JSON.stringify(x.status);
-      var at = JSON.stringify(x.created_at);
-      total2 = total2 + Number(total);
-    });
 
-    console.log("total:" + total2);
-    alert("El Total de este dia es de :" + total2);
-    jquery("#root").append("Total de hoy:" + total2);
-  }
-
-  totales();
+  console.log("total:" + total2);
+  alert("El Total de este dia es de :" + total2);
+  jquery("#root").append("Total de hoy:" + total2);
 }

@@ -15,6 +15,56 @@ import {
 
 import "./styles.css";
 import "./styles.css";
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc
+} from "firebase/firestore/lite";
+import { v4 as uuidv4 } from "uuid";
+// Follow this pattern to import other Firebase services
+// import { } from 'firebase/<service>';
+
+// TODO: Replace the following with your app's Firebase project configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDwaatnrPGX1cmd_iPQawQy6to-3weRfgM",
+  authDomain: "test2-b0c78.firebaseapp.com",
+  databaseURL: "https://test2-b0c78-default-rtdb.firebaseio.com",
+  projectId: "test2-b0c78",
+  storageBucket: "test2-b0c78.appspot.com",
+  messagingSenderId: "1020612965446",
+  appId: "1:1020612965446:web:eb1e62394169e72485c647",
+  measurementId: "G-XYPBVB6JF6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+var total;
+var prods = "";
+// Get a list of cities from your database
+async function getCities(db) {
+  const citiesCol = collection(db, "tickets");
+  const citySnapshot = await getDocs(citiesCol);
+  const cityList = citySnapshot.docs.map((doc) => doc.data());
+  console.log(cityList);
+  var doubles = cityList.map(function (x) {
+    var ticket = x.ticket;
+    var id = x.id_ticket;
+    var total = 0;
+    var prods = "";
+    console.log(id);
+    ticket.map(function (w) {
+      prods += w.descripcion + ",";
+      total += Number(w.precio);
+      console.log(total);
+    });
+  });
+  return cityList;
+}
+
+getCities(db);
+
 var notas = {
   partidas: []
 };
@@ -30,7 +80,8 @@ for (let index = 0; index < tickets.length; index++) {
 const axios = require("axios").default;
 axios.defaults.baseURL = "https://regsserver.herokuapp.com/tickets";
 
-var fecha = moment().format("MMMM Do YYYY, h:mm:ss a");
+var fecha = moment().unix();
+console.log(fecha);
 const Facturapi = require("facturapi");
 const receipt = require("receipt");
 const facturapi = new Facturapi(live);
@@ -39,16 +90,48 @@ var url;
 var result;
 var cambio;
 async function recibo() {
-  axios
-    .post("/new", {
-      ticket: notas.partidas
-    })
-    .then(function (response) {
-      console.log(response);
-    })
-    .catch(function (error) {
-      console.log(error);
+  try {
+    var id = uuidv4();
+    var total3 = 0;
+
+    tickets.map(function (w) {
+      total3 += Number(w.precio);
     });
+    const docRef = await addDoc(collection(db, "tickets"), {
+      ticket: notas.partidas,
+      id_ticket: id,
+      Fecha_sec: fecha,
+      fecha: new Date(),
+      total: total3
+    });
+
+    console.log("Document written with ID: ", docRef.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+  try {
+    var id = uuidv4();
+    var total3 = 0;
+
+    tickets.map(function (w) {
+      total3 += Number(w.precio);
+      console.log("total_recibo" + total3);
+    });
+    const docRef = await addDoc(collection(db, "notas_factura"), {
+      ticket: tickets,
+      id_ticket: id,
+      Fecha_sec: fecha,
+      fecha: new Date(),
+      concepto: "Venta",
+      total: total3,
+      unidad: "ACT",
+      claveprodserv: "01010101"
+    });
+
+    console.log("nota para factura global with ID: ", docRef.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
   // url = "<h5 id='url'>" + receipt2.self_invoice_url + "</h5>";
 
   // console.log(url);
@@ -211,13 +294,15 @@ async function jsonCambio(data) {
     precio: Number(imp_prod),
     unidad: unidad,
     fecha: d1.toString(),
-    seconds: d2,
     cantidad: Number(data.cantidad)
   };
   var newCon2 = {
-    item: data.descripcion,
-    qty: Number(data.cantidad),
-    cost: Number(imp_prod)
+    descripcion: data.descripcion,
+    claveprodserv: clave,
+    precio: Number(imp_prod),
+    unidad: unidad,
+    fecha: d1.toString(),
+    cantidad: Number(data.cantidad)
   };
   notas.partidas.push(newCon);
 
