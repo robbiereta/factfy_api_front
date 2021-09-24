@@ -27,6 +27,7 @@ import {
   query,
   where
 } from "firebase/firestore/lite";
+const axios = require("axios").default;
 const base64json = require("base64json");
 const firebaseConfig = {
   apiKey: "AIzaSyDwaatnrPGX1cmd_iPQawQy6to-3weRfgM",
@@ -41,7 +42,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+var base64 = require("base-64");
 var notas = {
   partidas: []
 };
@@ -64,6 +65,7 @@ var url;
 var folio;
 var fecha_fin;
 var fecha_inicio;
+
 async function recibo() {
   const receipt2 = await facturapi.receipts.create({
     payment_form: Facturapi.PaymentForm.EFECTIVO,
@@ -80,71 +82,6 @@ var lista = {
   recibos: []
 };
 
-var factura_templ = {
-  Version: "3.3",
-  Serie: "A",
-  Folio: "2",
-  Fecha: "2021-09-20T12:00:00",
-  FormaPago: "01",
-  SubTotal: "1.00",
-  Moneda: "MXN",
-  Total: "1.16",
-  MetodoPago: "PUE",
-  LugarExpedicion: "58297",
-  TipoDeComprobante: "I",
-  Emisor: {
-    Rfc: "ZUÑ920208KL4",
-    Nombre: "ZAPATERIA URTADO ÑERI SA DE CV",
-    RegimenFiscal: "601"
-  },
-  Receptor: {
-    Rfc: "XAXX010101000",
-    Nombre: "PUBLICO EN GENERAL",
-    UsoCFDI: "G01"
-  },
-  Conceptos: {
-    Concepto: [
-      {
-        ClaveProdServ: "01010101",
-        ClaveUnidad: "E48",
-        NoIdentificacion: "00001",
-        Cantidad: "1",
-        Unidad: "Unidad de Servicio",
-        Descripcion: "Prueba Timbrado",
-        ValorUnitario: "1.00",
-        Importe: "1.00",
-        Impuestos: {
-          Traslados: {
-            Traslado: [
-              {
-                Base: "1",
-                Impuesto: "002",
-                TipoFactor: "Tasa",
-                TasaOCuota: "0.160000",
-                Importe: "0.16"
-              }
-            ]
-          }
-        }
-      }
-    ]
-  },
-  Impuestos: {
-    TotalImpuestosTrasladados: "0.16",
-    Traslados: {
-      Traslado: [
-        {
-          Impuesto: "002",
-          TipoFactor: "Tasa",
-          TasaOCuota: "0.160000",
-          Importe: "0.16"
-        }
-      ]
-    }
-  }
-};
-
-let encoded = base64json.stringify(factura_templ, null, 2);
 async function global() {
   const citiesCol = collection(db, "notas_factura");
   console.log(fecha_inicio);
@@ -178,8 +115,54 @@ async function global() {
       };
       lista.recibos.push(newCon);
     }
-    //agregar aqui los campos para las columnas
+    console.log(lista.recibos);
   });
+  var axios = require("axios");
+  var data = JSON.stringify({
+    emisor: {
+      uuid: "507d0fa0-9496-424d-9b43-a01a25843f98"
+    },
+    receptor: {
+      uuid: "c9d2ba34-53f9-45cd-83ff-f29ebc3e39e2"
+    },
+    factura: {
+      fecha: "2019-07-25 10:22:18",
+      tipo: "ingreso",
+      generacion_automatica: true,
+      subtotal: 2000,
+      impuesto_federal: 320,
+      total: 2320,
+      conceptos: [
+        {
+          clave_producto_servicio: "76111500",
+          clave_unidad_de_medida: "E48",
+          cantidad: 1,
+          descripcion: "SERVICIO DE LIMPIEZA",
+          valor_unitario: 2000,
+          total: 2000
+        }
+      ]
+    }
+  });
+
+  var config = {
+    method: "post",
+    url: "https://api-sandbox.facturify.com/api/v1/factura",
+    headers: {
+      Authorization:
+        "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLXNhbmRib3guZmFjdHVyaWZ5LmNvbVwvYXBpXC92MVwvYXV0aCIsImlhdCI6MTYzMjI2MDQzMCwiZXhwIjoxNjMyMzQ2ODMwLCJuYmYiOjE2MzIyNjA0MzAsImp0aSI6IkN5Q21qOEFxdkxDeEFlRWoiLCJzdWIiOjEwMDIsInBydiI6IjBhNWI5MDAwZDM0YTEzOTYxMThlNTQ4MzQyZWM0NDAxNmYwOGMzMzEifQ.aCurxhsbOjuLch2tWbwPSDwPrB4Gh8o7wuaRvcoHLdxB63hvXO4vMce4DY6MB3mlH6nrdEEGKAPaIuO-kWJkhw",
+      "Content-Type": "application/json"
+    },
+    data: data
+  };
+
+  axios(config)
+    .then(function (response) {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
 }
 
 var ticket = (
@@ -235,7 +218,7 @@ export default function Global() {
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
-          type="date"
+          type="text"
           {...register("fecha_inicio")}
           placeholder="fecha inicio"
         />

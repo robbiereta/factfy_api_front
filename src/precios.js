@@ -25,9 +25,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const axios = require("axios");
-axios.defaults.baseURL = "https://regsserver.herokuapp.com/tickets";
-const Facturapi = require("facturapi");
-const facturapi = new Facturapi("sk_live_NpE3r9Rl4KadW4JQNm5WM17oXQVng6xZ");
+
 var folio;
 var lista = {
   recibos: []
