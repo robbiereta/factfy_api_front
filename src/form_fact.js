@@ -72,16 +72,12 @@ var notas = {
 var tickets = [];
 var $ = jquery;
 
-
 for (let index = 0; index < tickets.length; index++) {
   const element = tickets[index];
 }
-
-var fecha = moment().unix();
-console.log(fecha);
+const format1 = "YYYY-MM-DD HH:mm:ss";
 
 const receipt = require("receipt");
-
 
 const axios = require("axios");
 var total;
@@ -131,18 +127,20 @@ async function recibo() {
   } catch (e) {
     console.error("Error adding document: ", e);
   }
-
+  var date1 = new Date();
+  var dateTime = moment(date1).format(format1);
   var ivatotal = total3 * 0.16;
   var subtotal = total3 - ivatotal;
   var factura_templ = {
     emisor: {
-      uuid: "f3313239-a434-4dfd-b10d-63b57e2ea559"
+      uuid: "507d0fa0-9496-424d-9b43-a01a25843f98"
     },
     receptor: {
-      uuid: "277ddda0-6254-11eb-a336-331a303b0a87"
+      uuid: "c9d2ba34-53f9-45cd-83ff-f29ebc3e39e2"
     },
     factura: {
-      fecha: "'" + new Date() + "'",
+      fecha: dateTime,
+      folio: 3,
       tipo: "ingreso",
       generacion_automatica: true,
       subtotal: subtotal,
@@ -152,103 +150,13 @@ async function recibo() {
     }
   };
   console.log(factura_templ);
- 
 
-var data = JSON.stringify({
-  "emisor": {
-    "uuid": "6bb8f310-1f7a-4313-810b-5e4265581b03"
-  },
-  "receptor": {
-    "uuid": "cd8b20e9-6d68-41af-8b25-acda2611ef55"
-  },
-  "factura": {
-    "fecha": "2019-07-25 10:22:18",
-    "tipo": "ingreso",
-    "generacion_automatica": true,
-    "subtotal": 2000,
-    "impuesto_federal": 320,
-    "total": 2320,
-    "conceptos": [
-      {
-        "clave_producto_servicio": "76111500",
-        "clave_unidad_de_medida": "E48",
-        "cantidad": 1,
-        "descripcion": "SERVICIO DE LIMPIEZA",
-        "valor_unitario": 2000,
-        "total": 2000
-      }
-    ]
-  }
-});
-
-var config = {
-  method: 'post',
-  url: 'https://api.facturify.com/api/v1/factura',
-  headers: { 
-    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLXNhbmRib3guZmFjdHVyaWZ5LmNvbVwvYXBpXC92MVwvYXV0aCIsImlhdCI6MTYzMjI2MDQzMCwiZXhwIjoxNjMyMzQ2ODMwLCJuYmYiOjE2MzIyNjA0MzAsImp0aSI6IkN5Q21qOEFxdkxDeEFlRWoiLCJzdWIiOjEwMDIsInBydiI6IjBhNWI5MDAwZDM0YTEzOTYxMThlNTQ4MzQyZWM0NDAxNmYwOGMzMzEifQ.aCurxhsbOjuLch2tWbwPSDwPrB4Gh8o7wuaRvcoHLdxB63hvXO4vMce4DY6MB3mlH6nrdEEGKAPaIuO-kWJkhw', 
-    'Content-Type': 'application/json',
-    
-  },
-  data : data
-};
-
-axios(config)
-.then(function (response) {
-  console.log(JSON.stringify(response.data));
-})
-.catch(function (error) {
-  console.log(error);
-});
-
-
-
-  // result = prompt("¿con cuanto pago?");
-  // cambio = result - total;
-  // alert("el cambio es de :" + cambio);
-  // jquery("#pago").text(result);
-  // jquery("#cambio").text(cambio);
-  // $("#recibo").click();
-}
-function global() {
   var axios = require("axios");
-  var data = JSON.stringify({
-    emisor: {
-      uuid: "507d0fa0-9496-424d-9b43-a01a25843f98"
-    },
-    receptor: {
-      uuid: "c9d2ba34-53f9-45cd-83ff-f29ebc3e39e2"
-    },
-    factura: {
-      fecha: "2019-07-25 10:22:18",
-      tipo: "ingreso",
-      generacion_automatica: true,
-      subtotal: 2000,
-      impuesto_federal: 320,
-      total: 2320,
-      conceptos: [
-        {
-          clave_producto_servicio: "76111500",
-          clave_unidad_de_medida: "E48",
-          cantidad: 1,
-          descripcion: "SERVICIO DE LIMPIEZA",
-          valor_unitario: 2000,
-          total: 2000
-        }
-      ]
-    }
-  });
 
   var config = {
     method: "post",
-    url: "https://api-sandbox.facturify.com/api/v1/factura",
-    headers: {
-      Authorization:
-        "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLXNhbmRib3guZmFjdHVyaWZ5LmNvbVwvYXBpXC92MVwvYXV0aCIsImlhdCI6MTYzMjI2MDQzMCwiZXhwIjoxNjMyMzQ2ODMwLCJuYmYiOjE2MzIyNjA0MzAsImp0aSI6IkN5Q21qOEFxdkxDeEFlRWoiLCJzdWIiOjEwMDIsInBydiI6IjBhNWI5MDAwZDM0YTEzOTYxMThlNTQ4MzQyZWM0NDAxNmYwOGMzMzEifQ.aCurxhsbOjuLch2tWbwPSDwPrB4Gh8o7wuaRvcoHLdxB63hvXO4vMce4DY6MB3mlH6nrdEEGKAPaIuO-kWJkhw",
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
-      
-    },
-    data: data
+    url: "https://jsonserverobbie.herokuapp.com/facturaglobal",
+    data: factura_templ
   };
 
   axios(config)
@@ -258,7 +166,15 @@ function global() {
     .catch(function (error) {
       console.log(error);
     });
+
+  // result = prompt("¿con cuanto pago?");
+  // cambio = result - total;
+  // alert("el cambio es de :" + cambio);
+  // jquery("#pago").text(result);
+  // jquery("#cambio").text(cambio);
+  // $("#recibo").click();
 }
+
 var ticket = (
   <div id="ticket">
     <div id="invoice-POS">
@@ -401,13 +317,13 @@ async function jsonCambio(data) {
     clave = "25174700";
     unidad = "H87";
   }
-
+  var iva = Number(imp_prod) * 0.16;
   var newCon = {
     clave_producto_servicio: "01010101",
     clave_unidad_de_medida: "ACT",
     cantidad: 1,
     descripcion: "Venta",
-    valor_unitario: Number(imp_prod) / 1.16,
+    valor_unitario: Number(imp_prod) - iva,
     total: Number(imp_prod)
   };
   var newCon2 = {
